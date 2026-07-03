@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { AppHeader } from "@/components/app-header";
 import { LinkButton } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth/current-user";
 import {
   MODE_BY_SLUG,
   PRACTICE_MODES,
@@ -14,25 +13,17 @@ import {
 export const metadata: Metadata = { title: "Dashboard · Fluent" };
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const { user, name, isAdmin, supabase } = await requireUser();
 
-  const [{ data: profile }, { data: activeSession }] = await Promise.all([
-    supabase.from("profiles").select("display_username").eq("id", user.id).single(),
-    supabase
-      .from("study_sessions")
-      .select("id, kind, title, updated_at")
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-  ]);
+  const { data: activeSession } = await supabase
+    .from("study_sessions")
+    .select("id, kind, title, updated_at")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-  const name = profile?.display_username ?? user.email?.split("@")[0] ?? "there";
   const resumeMode = activeSession ? MODE_BY_SLUG[activeSession.kind] : null;
 
   const speaking = PRACTICE_MODES.filter((m) => m.category === "speaking");
@@ -40,7 +31,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-dvh bg-neutral-50 dark:bg-neutral-950">
-      <AppHeader username={name} />
+      <AppHeader username={name} isAdmin={isAdmin} />
 
       <main className="mx-auto max-w-5xl px-6 py-10">
         <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">

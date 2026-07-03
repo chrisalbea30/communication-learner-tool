@@ -4,7 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 import type { Database } from "@/lib/types/database";
 
 /** Routes that require an authenticated user. */
-const PROTECTED_PREFIXES = ["/dashboard", "/practice", "/speaking"];
+const PROTECTED_PREFIXES = ["/dashboard", "/practice", "/speaking", "/admin"];
 /** Auth pages that a signed-in user should be bounced away from. */
 const AUTH_PAGES = ["/login", "/signup"];
 

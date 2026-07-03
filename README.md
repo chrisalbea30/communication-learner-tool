@@ -62,6 +62,24 @@ address (`<username>@<AUTH_EMAIL_DOMAIN>`) that is never used to send mail. This
 keeps `auth.uid()` and row-level security working exactly as normal while the
 user only ever sees a username field. See `src/lib/auth/username.ts`.
 
+## Admin panel
+
+One account can monitor everything at **`/admin`** — total learners, sessions,
+practice attempts, average speaking scores, a per-learner table, and recent
+speaking sessions. Access is gated server-side: only the user whose username
+matches `ADMIN_USERNAME` (default `admin`) may open it, and the page reads
+cross-user data with the service-role key (never exposed to the browser).
+
+Seed / reset the admin account with:
+
+```bash
+node scripts/seed-admin.mjs   # username "admin"; password from ADMIN_PASSWORD env, else "Admin123"
+```
+
+> ⚠️ **Change the admin password before any public deployment.** Run the script
+> with a strong `ADMIN_PASSWORD`, or reset it in Supabase → Authentication →
+> Users. A guessable admin password exposes every learner's data.
+
 ## Project structure
 
 ```
