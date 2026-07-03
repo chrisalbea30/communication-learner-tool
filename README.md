@@ -26,7 +26,7 @@ Open `.env.local` and replace the placeholders:
 | `OPENAI_API_KEY` | platform.openai.com → API keys |
 | `OPENAI_MODEL` | leave as `gpt-4o-mini`, or any chat model your key can access |
 | `ELEVENLABS_API_KEY` | elevenlabs.io → Profile → API key (used for the AI voice) |
-| `ELEVENLABS_VOICE_ID` | a voice id from your ElevenLabs Voice Library (default = "Rachel") |
+| `ELEVENLABS_VOICE_ID` | a premade voice id (default "Sarah"). On the **free** plan use your account's premade voices — "library" voices are blocked via the API |
 | `ELEVENLABS_MODEL_ID` | leave as `eleven_turbo_v2_5` (low-latency, good for conversation) |
 | `AUTH_EMAIL_DOMAIN` | leave as-is (internal only, never emailed) |
 

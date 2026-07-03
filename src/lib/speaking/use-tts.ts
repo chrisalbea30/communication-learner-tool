@@ -4,7 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
  * Plays the AI's spoken replies via the server ElevenLabs proxy (`/api/tts`).
- * Only one clip plays at a time — calling `speak` again interrupts the previous.
+ * If ElevenLabs fails for any reason (free-plan limits, quota exhausted, network),
+ * it falls back to the browser's built-in speech synthesis so the AI is never
+ * silent. Only one clip plays at a time — calling `speak` again interrupts it.
  */
 export function useTts() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -21,12 +23,28 @@ export function useTts() {
       URL.revokeObjectURL(urlRef.current);
       urlRef.current = null;
     }
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
   }, []);
 
   const stop = useCallback(() => {
     cleanup();
     setSpeaking(false);
   }, [cleanup]);
+
+  const browserFallback = useCallback((text: string) => {
+    if (typeof window === "undefined" || !window.speechSynthesis) {
+      setSpeaking(false);
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.rate = 1;
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => setSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+  }, []);
 
   const speak = useCallback(
     async (text: string) => {
@@ -41,9 +59,8 @@ export function useTts() {
           body: JSON.stringify({ text }),
         });
         if (!res.ok) {
-          const data = (await res.json().catch(() => ({}))) as { error?: string };
-          setError(data.error ?? "Voice unavailable.");
-          setSpeaking(false);
+          // ElevenLabs unavailable (plan/quota/etc.) — use the browser voice.
+          browserFallback(text);
           return;
         }
         const blob = await res.blob();
@@ -60,11 +77,10 @@ export function useTts() {
         };
         await audio.play();
       } catch {
-        setError("Could not play the voice.");
-        setSpeaking(false);
+        browserFallback(text);
       }
     },
-    [cleanup],
+    [cleanup, browserFallback],
   );
 
   useEffect(() => () => cleanup(), [cleanup]);

@@ -35,7 +35,7 @@ export async function POST(req: Request) {
   }
 
   const voiceId =
-    body.voiceId || process.env.ELEVENLABS_VOICE_ID || "21m00Tcm4TlvDq8ikWAM";
+    body.voiceId || process.env.ELEVENLABS_VOICE_ID || "EXAVITQu4vr4xnSDxMaL";
   const modelId = process.env.ELEVENLABS_MODEL_ID || "eleven_turbo_v2_5";
 
   const upstream = await fetch(`${ELEVEN_BASE}/${voiceId}`, {

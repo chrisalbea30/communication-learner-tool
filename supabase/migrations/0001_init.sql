@@ -60,6 +60,20 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- Backfill profiles for any auth users created before this trigger existed
+-- (e.g. accounts made while testing before the schema was applied).
+insert into public.profiles (id, username, display_username)
+select
+  u.id,
+  lower(coalesce(u.raw_user_meta_data ->> 'username', split_part(u.email, '@', 1))),
+  coalesce(
+    u.raw_user_meta_data ->> 'display_username',
+    u.raw_user_meta_data ->> 'username',
+    split_part(u.email, '@', 1)
+  )
+from auth.users u
+on conflict (id) do nothing;
+
 -- ── study_sessions ──────────────────────────────────────────────────────────
 -- A resumable study session. The dashboard "Continue" reads the most recent
 -- session whose status = 'active'. `progress` holds module-specific resume data.
